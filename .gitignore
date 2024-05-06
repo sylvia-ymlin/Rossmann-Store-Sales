@@ -1,0 +1,7 @@
+data/raw/train.csv
+logs/
+.DS_Store
+__pycache__/
+*.pyc
+.env
+data/output/
