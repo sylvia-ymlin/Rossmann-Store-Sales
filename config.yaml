@@ -1,0 +1,53 @@
+# General Configuration
+enable_cache: False
+
+# Model Control Plane
+model:
+  name: rossmann_sales_predictor
+  license: MIT
+  description: Predictor for Rossmann Store Sales.
+  tags: ["time-series", "regression", "sales_prediction", "xgboost"]
+
+# Data Configuration
+data:
+  features: 
+    - "Store"
+    - "DayOfWeek"
+    - "Promo"
+    - "StateHoliday"
+    - "SchoolHoliday"
+    - "Year"
+    - "Month"
+    - "Day"
+    - "IsWeekend"
+    - "DayOfMonth"
+    - "CompetitionDistance"
+    - "CompetitionOpenTime"
+    - "StoreType"
+    - "Assortment"
+  target: "Sales"
+  archive_path: "./data/raw/train.csv"
+  store_path: "./data/raw/store.csv"
+
+# Pipeline Configuration
+pipeline:
+  enable_tuning: False
+  feature_engineering:
+    - strategy: "date_transformation"
+    - strategy: "rossmann_features"
+    - strategy: "fourier_seasonality"
+      period: 365.25
+      order: 5
+    - strategy: "easter_effect"
+    - strategy: "log_target"
+      
+# Model Hyperparameters
+model_params:
+  xgboost:
+    n_estimators: 1000
+    learning_rate: 0.05
+    max_depth: 10
+    subsample: 0.8
+    colsample_bytree: 0.8
+    random_state: 42
+    n_jobs: -1

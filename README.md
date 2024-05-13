@@ -10,24 +10,58 @@ app_port: 7860
 
 # Rossmann Store Sales Intelligence
 
-## The problem
-Retailers struggle with manual sales forecasting, leading to stockouts or excessive inventory across 1,115 stores.
+> **Architecture Status**: Refactored to V2 Standard (FastAPI + Config-Driven + Docker)
 
-## What I built
-An end-to-end MLOps framework that automates high-precision forecasting using XGBoost and real-time monitoring.
+## The Problem
+Retailers struggle with manual sales forecasting, leading to stockouts or excessive inventory across 1,115 stores. Accurate prediction requires handling complex seasonality, moving holidays (Easter), and competition effects.
 
-## Why it matters
-Automated precision forecasting reduces operational waste and ensures product availability for millions of customers.
+## The Solution
+An end-to-end **MLOps Prediction System** that automates high-precision forecasting.
+- **Algorithm**: XGBoost with custom Feature Engineering (Fourier Seasonality, Drift Detection).
+- **Architecture**: Config-driven FastAPI backend with a custom "Hand-Drawn" HTML frontend.
+- **Deployment**: containerized (Docker) for Hugging Face Spaces.
 
 ## Quick Start
-1. `pip install -r requirements.txt`
-2. `python scripts/train_production_model.py`
-3. `streamlit run streamlit_portfolio/app.py`
 
-## Results
-- Model Accuracy: ~11.7% RMSPE
-- System Latency: <50ms per inference
+### Option 1: Docker (Recommended)
+```bash
+# Build the image
+docker build -t rossmann-sales .
 
-## What I learned
-- Implementing Fourier seasonal terms significantly improves periodic demand capture.
-- Automated drift detection is critical for maintaining performance in dynamic retail environments.
+# Run the container (Port 7860)
+docker run -p 7860:7860 rossmann-sales
+```
+
+### Option 2: Local Python
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the server
+uvicorn src.app:app --reload --port 7860
+```
+Visit `http://localhost:7860` to access the interface.
+
+## Configuration
+The project is fully driven by `config.yaml`. You can adjust model parameters and pipeline steps without changing code.
+
+```yaml
+# config.yaml
+feature_engineering:
+  - strategy: "fourier_seasonality"
+    period: 365.25
+    order: 5
+model_params:
+  xgboost:
+    n_estimators: 1000
+    learning_rate: 0.05
+```
+
+## Key Engineering Features
+1.  **Strict Configuration**: All hyperparameters are centralized in `config.yaml` and validated via Pydantic (`src/config.py`).
+2.  **Modular Pipeline**: Feature engineering steps (Seasonality, Easter effects) are dynamically loaded.
+3.  **Production Ready**: Non-root Docker container compatible with modern cloud platforms (HF Spaces).
+
+## Performance
+- **Accuracy**: ~11.7% RMSPE
+- **Latency**: <50ms per inference
