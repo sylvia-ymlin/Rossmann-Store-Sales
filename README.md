@@ -65,3 +65,4 @@ model_params:
 ## Performance
 - **Accuracy**: ~11.7% RMSPE
 - **Latency**: <50ms per inference
+# Heartbeat for deployment trigger
