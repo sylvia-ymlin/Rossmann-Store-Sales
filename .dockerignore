@@ -5,7 +5,7 @@ __pycache__
 .gitignore
 .DS_Store
 data/
-models/
+models/*
 !models/rossmann_production_model.pkl
 notebooks/
 reports/
