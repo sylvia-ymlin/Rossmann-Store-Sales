@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rossmann Sales Forecast Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #f5f1ea;
+            --panel: #fffdf9;
+            --border: #d9d2c3;
+            --text: #2d2a26;
+            --muted: #6b655d;
+            --accent: #2f6f72;
+            --accent-dark: #204f52;
+            --soft: #e7f0ee;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            color: var(--text);
+            background: linear-gradient(180deg, #f7f3ec 0%, #f2ede4 100%);
+        }
+        .layout {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+        }
+        .sidebar {
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            padding: 24px;
+        }
+        .main {
+            padding: 32px;
+        }
+        h1, h2, h3, p {
+            margin-top: 0;
+        }
+        h1 {
+            font-size: 1.7rem;
+            margin-bottom: 8px;
+        }
+        .muted {
+            color: var(--muted);
+            line-height: 1.5;
+        }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+        input, select, button {
+            width: 100%;
+            font: inherit;
+        }
+        input, select {
+            padding: 10px 12px;
+            margin-bottom: 14px;
+            border: 1px solid var(--border);
+            background: white;
+        }
+        button {
+            padding: 12px;
+            border: none;
+            background: var(--accent);
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: var(--accent-dark);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+        .value {
+            font-size: 2rem;
+            margin: 8px 0;
+        }
+        .list {
+            display: grid;
+            gap: 10px;
+        }
+        .list-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        .chart-wrap {
+            height: 320px;
+        }
+        .hidden {
+            display: none;
+        }
+        .status {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+            .main {
+                padding: 20px;
+            }
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <h1>Rossmann Forecast Demo</h1>
+            <p class="muted">
+                This page sends a small request to the FastAPI demo. Store metadata is loaded from
+                `store.csv`, so you only provide store id and scenario variables.
+            </p>
+
+            <form id="prediction-form">
+                <label for="store_id">Store</label>
+                <input type="number" id="store_id" min="1" max="1115" value="1" required>
+
+                <label for="start_date">Start date</label>
+                <input type="date" id="start_date" required>
+
+                <label for="horizon">Forecast days</label>
+                <select id="horizon">
+                    <option value="7" selected>7</option>
+                    <option value="14">14</option>
+                    <option value="30">30</option>
+                </select>
+
+                <label for="promo">Promo</label>
+                <select id="promo">
+                    <option value="1" selected>Yes</option>
+                    <option value="0">No</option>
+                </select>
+
+                <label for="state_holiday">State holiday</label>
+                <select id="state_holiday">
+                    <option value="0" selected>None</option>
+                    <option value="a">Public holiday</option>
+                    <option value="b">Easter holiday</option>
+                    <option value="c">Christmas</option>
+                </select>
+
+                <label for="school_holiday">School holiday</label>
+                <select id="school_holiday">
+                    <option value="0" selected>No</option>
+                    <option value="1">Yes</option>
+                </select>
+
+                <button type="submit">Run forecast</button>
+            </form>
+
+            <p id="status" class="status">Waiting for input.</p>
+        </aside>
+
+        <main class="main">
+            <div class="card">
+                <h2>Project focus</h2>
+                <p class="muted">
+                    The goal is to demonstrate a clean forecasting workflow: feature engineering,
+                    time-based evaluation, a saved model, and a thin prediction API.
+                </p>
+            </div>
+
+            <div id="results" class="hidden">
+                <div class="grid">
+                    <section class="card">
+                        <h3>First-day prediction</h3>
+                        <div id="predicted-sales" class="value">0.00</div>
+                        <p id="summary" class="muted"></p>
+                    </section>
+
+                    <section class="card">
+                        <h3>Top model contributions</h3>
+                        <p class="muted">
+                            These scores are relative model contributions in prediction space. They
+                            are not causal effect estimates.
+                        </p>
+                        <div id="drivers" class="list"></div>
+                    </section>
+                </div>
+
+                <section class="card">
+                    <h3>Forecast path</h3>
+                    <div class="chart-wrap">
+                        <canvas id="forecast-chart"></canvas>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById("start_date").valueAsDate = new Date();
+        const statusEl = document.getElementById("status");
+        let forecastChart = null;
+
+        document.getElementById("prediction-form").addEventListener("submit", async (event) => {
+            event.preventDefault();
+            statusEl.textContent = "Running forecast...";
+
+            const payload = {
+                Store: parseInt(document.getElementById("store_id").value, 10),
+                Date: document.getElementById("start_date").value,
+                Promo: parseInt(document.getElementById("promo").value, 10),
+                StateHoliday: document.getElementById("state_holiday").value,
+                SchoolHoliday: parseInt(document.getElementById("school_holiday").value, 10),
+                ForecastDays: parseInt(document.getElementById("horizon").value, 10)
+            };
+
+            try {
+                const response = await fetch("/predict", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || "Request failed");
+                }
+
+                document.getElementById("results").classList.remove("hidden");
+                document.getElementById("predicted-sales").textContent =
+                    "€" + data.PredictedSales.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                document.getElementById("summary").textContent =
+                    `Store ${data.Store} forecast starting ${data.Date} for ${data.Forecast.length} day(s).`;
+
+                const drivers = document.getElementById("drivers");
+                drivers.innerHTML = "";
+                data.Explanation.forEach((item) => {
+                    const row = document.createElement("div");
+                    row.className = "list-row";
+                    row.innerHTML = `<span>${item.feature}</span><strong>${item.formatted_val}</strong>`;
+                    drivers.appendChild(row);
+                });
+
+                updateChart(data.Forecast);
+                statusEl.textContent = "Forecast complete.";
+            } catch (error) {
+                statusEl.textContent = error.message;
+            }
+        });
+
+        function updateChart(forecast) {
+            const ctx = document.getElementById("forecast-chart").getContext("2d");
+            const labels = forecast.map((item) =>
+                new Date(item.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+            );
+            const values = forecast.map((item) => item.sales);
+
+            if (forecastChart) {
+                forecastChart.destroy();
+            }
+
+            forecastChart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels,
+                    datasets: [{
+                        label: "Predicted sales",
+                        data: values,
+                        borderColor: "#2f6f72",
+                        backgroundColor: "rgba(47, 111, 114, 0.10)",
+                        fill: true,
+                        tension: 0.15,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: (value) => "€" + value.toLocaleString()
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

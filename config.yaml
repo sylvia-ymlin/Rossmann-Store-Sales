@@ -1,16 +1,10 @@
-# General Configuration
-enable_cache: False
-
-# Model Control Plane
 model:
   name: rossmann_sales_predictor
-  license: MIT
-  description: Predictor for Rossmann Store Sales using XGBoost with ZenML pipeline.
-  tags: ["time-series", "regression", "sales_prediction", "xgboost", "zenml", "mlflow"]
+  description: Predict daily Rossmann store sales with a small XGBoost forecasting pipeline.
+  tags: ["time-series", "regression", "sales-prediction", "xgboost"]
 
-# Data Configuration
 data:
-  features: 
+  features:
     - "Store"
     - "DayOfWeek"
     - "Promo"
@@ -20,45 +14,36 @@ data:
     - "Month"
     - "Day"
     - "IsWeekend"
-    - "DayOfMonth"
-    - "WeekOfYear"
-    - "DayOfYear"
-    - "CompetitionDistance"
-    - "CompetitionOpenMonths"
-    - "LogCompetitionDistance"
     - "StoreType"
     - "Assortment"
+    - "CompetitionDistance"
+    - "LogCompetitionDistance"
     - "Promo2"
     - "Promo2SinceWeek"
     - "Promo2SinceYear"
-    - "DaysToEaster"
-    - "IsEasterWeek"
+    - "days_to_easter"
+    - "easter_effect"
+    - "fourier_sin_1"
+    - "fourier_cos_1"
+    - "fourier_sin_2"
+    - "fourier_cos_2"
+    - "fourier_sin_3"
+    - "fourier_cos_3"
+    - "fourier_sin_4"
+    - "fourier_cos_4"
+    - "fourier_sin_5"
+    - "fourier_cos_5"
   target: "Sales"
-  archive_path: "./data/raw/train.csv"
   train_path: "./data/raw/train.csv"
   store_path: "./data/raw/store.csv"
 
-# Pipeline Configuration
 pipeline:
-  enable_tuning: False
-  enable_promotion: False
-  promotion_threshold: 15.0
-  test_size: 0.2
-  random_state: 42
-  feature_engineering:
-    - strategy: "date_transformation"
-    - strategy: "rossmann_features"
-    - strategy: "fourier_seasonality"
-      period: 365.25
-      order: 5
-    - strategy: "easter_effect"
-    - strategy: "log_target"
-    - strategy: "categorical_encoding"
+  fourier_period: 365.25
+  fourier_order: 5
 
-# Model Hyperparameters
 model_params:
   xgboost:
-    n_estimators: 1000
+    n_estimators: 500
     learning_rate: 0.05
     max_depth: 10
     subsample: 0.8
@@ -66,13 +51,4 @@ model_params:
     random_state: 42
     n_jobs: -1
     verbosity: 0
-
-# MLflow Configuration
-mlflow:
-  tracking_uri: "http://localhost:5000"
-  experiment_name: "rossmann-sales-pipeline"
-  model_name: "rossmann_sales_predictor"
-
-# ZenML Configuration  
-zenml:
-  pipeline_name: "rossmann_training_pipeline"
+    objective: "reg:squarederror"

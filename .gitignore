@@ -7,3 +7,6 @@ __pycache__/
 data/output/
 docs/interview_cases.md
 docs/code_review.md
+.pytest_cache/
+models/*.json
+reports/metrics/
