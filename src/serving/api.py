@@ -26,7 +26,7 @@ from src.training.features import (
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-model = None
+model: xgb.Booster | None = None
 store_lookup: dict[int, dict[str, object]] = {}
 model_version = "unknown"
 
@@ -48,7 +48,7 @@ def load_runtime_assets() -> None:
     store_lookup = load_store_lookup()
     model_path = Path(os.environ.get("MODEL_PATH", str(DEFAULT_MODEL_PATH)))
     if model_path.exists():
-        model = xgb.XGBRegressor()
+        model = xgb.Booster()
         model.load_model(str(model_path))
         logger.info(f"Model loaded from {model_path}")
     else:
@@ -67,6 +67,20 @@ def load_runtime_assets() -> None:
 async def lifespan(_: FastAPI):
     load_runtime_assets()
     yield
+
+
+def predict_with_model(loaded_model: object, X: pd.DataFrame) -> np.ndarray:
+    if isinstance(loaded_model, xgb.Booster):
+        return loaded_model.predict(xgb.DMatrix(X))
+    return loaded_model.predict(X)
+
+
+def predict_contributions(loaded_model: object, X: pd.DataFrame) -> np.ndarray:
+    if isinstance(loaded_model, xgb.Booster):
+        return loaded_model.predict(xgb.DMatrix(X), pred_contribs=True)
+    if hasattr(loaded_model, "get_booster"):
+        return loaded_model.get_booster().predict(xgb.DMatrix(X), pred_contribs=True)
+    raise TypeError("Loaded model does not support feature contribution prediction")
 
 
 app = FastAPI(
@@ -120,10 +134,10 @@ def predict(request: PredictionRequest):
         feature_cols = settings.data.features
         X = build_feature_matrix(df, feature_cols)
 
-        y_log = model.predict(X)
+        y_log = predict_with_model(model, X)
         y_sales = np.expm1(y_log)
 
-        contribs = model.get_booster().predict(xgb.DMatrix(X), pred_contribs=True)
+        contribs = predict_contributions(model, X)
         avg_contribs = contribs[:, :-1].mean(axis=0)
 
         explanation_items = []

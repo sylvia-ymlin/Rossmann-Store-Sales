@@ -1,6 +1,18 @@
+---
+title: Rossmann Store Sales Forecasting
+emoji: 📈
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Rossmann Store Sales Forecasting
 
 This project predicts daily Rossmann store sales from tabular retail data. It is a small end-to-end forecasting and MLOps learning project built around one training pipeline, one evaluation script, local experiment tracking, and one simple FastAPI endpoint with a browser page for manual testing.
+
+Live demo: [Hugging Face Space](https://huggingface.co/spaces/ymlin105/Rossmann-Store-Sales)
 
 ## What The Project Does
 
