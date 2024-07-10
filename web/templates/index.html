@@ -27,7 +27,7 @@
         .layout {
             min-height: 100vh;
             display: grid;
-            grid-template-columns: 320px 1fr;
+            grid-template-columns: 360px 1fr;
         }
         .sidebar {
             background: var(--panel);
@@ -41,8 +41,9 @@
             margin-top: 0;
         }
         h1 {
-            font-size: 1.7rem;
+            font-size: 1.95rem;
             margin-bottom: 8px;
+            line-height: 1.05;
         }
         .muted {
             color: var(--muted);
@@ -126,10 +127,10 @@
 <body>
     <div class="layout">
         <aside class="sidebar">
-            <h1>Rossmann Forecast Demo</h1>
+            <h1>Rossmann Sales Forecast Demo</h1>
             <p class="muted">
-                This page sends a small request to the FastAPI demo. Store metadata is loaded from
-                `store.csv`, so you only provide store id and scenario variables.
+                Use a store ID and a few scenario inputs to generate a short sales forecast. Store
+                metadata is loaded automatically from <code>store.csv</code>.
             </p>
 
             <form id="prediction-form">
@@ -166,7 +167,7 @@
                     <option value="1">Yes</option>
                 </select>
 
-                <button type="submit">Run forecast</button>
+                <button type="submit">Generate forecast</button>
             </form>
 
             <p id="status" class="status">Waiting for input.</p>
@@ -174,10 +175,10 @@
 
         <main class="main">
             <div class="card">
-                <h2>Project focus</h2>
+                <h2>What this demo shows</h2>
                 <p class="muted">
-                    The goal is to demonstrate a clean forecasting workflow: feature engineering,
-                    time-based evaluation, a saved model, and a thin prediction API.
+                    This demo sends a small request to the prediction API and returns a short sales
+                    forecast based on feature engineering, time-based evaluation, and a saved model.
                 </p>
             </div>
 
@@ -192,15 +193,15 @@
                     <section class="card">
                         <h3>Top model contributions</h3>
                         <p class="muted">
-                            These scores are relative model contributions in prediction space. They
-                            are not causal effect estimates.
+                            These values show which features influenced the prediction most in the
+                            model output space. They are descriptive, not causal.
                         </p>
                         <div id="drivers" class="list"></div>
                     </section>
                 </div>
 
                 <section class="card">
-                    <h3>Forecast path</h3>
+                    <h3>Forecast over time</h3>
                     <div class="chart-wrap">
                         <canvas id="forecast-chart"></canvas>
                     </div>
@@ -246,7 +247,7 @@
                         maximumFractionDigits: 2
                     });
                 document.getElementById("summary").textContent =
-                    `Store ${data.Store} forecast starting ${data.Date} for ${data.Forecast.length} day(s).`;
+                    `${data.Forecast.length}-day forecast for Store ${data.Store} starting on ${data.Date}.`;
 
                 const drivers = document.getElementById("drivers");
                 drivers.innerHTML = "";
@@ -258,7 +259,7 @@
                 });
 
                 updateChart(data.Forecast);
-                statusEl.textContent = "Forecast complete.";
+                statusEl.textContent = "Forecast ready.";
             } catch (error) {
                 statusEl.textContent = error.message;
             }

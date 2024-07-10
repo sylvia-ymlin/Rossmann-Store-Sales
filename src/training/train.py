@@ -54,7 +54,7 @@ def rmspe(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
 def run_training(
     model_path: str = str(DEFAULT_MODEL_PATH),
-    metrics_path: str = "reports/metrics/training_summary.json",
+    metrics_path: str = "metrics/training_summary.json",
     metadata_path: str = str(DEFAULT_MODEL_METADATA_PATH),
 ) -> dict:
     """Runs training, records validation metadata, and saves the final model."""

@@ -201,7 +201,7 @@ def main() -> Path:
     backtest = rolling_backtest(df, X, y, dates, validation_days=42, windows=3)
     summary = build_summary(holdout, backtest)
 
-    output_path = Path("reports/metrics/model_evaluation.json")
+    output_path = Path("metrics/model_evaluation.json")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)

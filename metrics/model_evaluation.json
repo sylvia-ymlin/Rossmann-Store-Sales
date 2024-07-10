@@ -1,0 +1,70 @@
+{
+  "dataset_rows_after_cleaning": 844338,
+  "holdout": {
+    "validation_days": 42,
+    "validation_start_date": "2015-06-20",
+    "validation_end_date": "2015-07-31",
+    "rows_train": 804056,
+    "rows_valid": 40282,
+    "baseline_rmspe": 23.5604,
+    "pre_tuning_model": {
+      "train_rmspe": 18.3328,
+      "valid_rmspe": 16.0662
+    },
+    "tuned_model": {
+      "train_rmspe": 11.3646,
+      "valid_rmspe": 12.8545
+    },
+    "tuned_improvement_vs_pre_tuning": 3.2117,
+    "tuned_improvement_vs_baseline": 10.7059
+  },
+  "rolling_backtest": [
+    {
+      "window": 1,
+      "validation_start_date": "2015-03-28",
+      "validation_end_date": "2015-05-08",
+      "rows_train": 729540,
+      "rows_valid": 37044,
+      "baseline_rmspe": 24.5686,
+      "tuned_valid_rmspe": 13.1266,
+      "improvement_vs_baseline": 11.442
+    },
+    {
+      "window": 2,
+      "validation_start_date": "2015-05-09",
+      "validation_end_date": "2015-06-19",
+      "rows_train": 766584,
+      "rows_valid": 37472,
+      "baseline_rmspe": 20.8702,
+      "tuned_valid_rmspe": 13.7426,
+      "improvement_vs_baseline": 7.1276
+    },
+    {
+      "window": 3,
+      "validation_start_date": "2015-06-20",
+      "validation_end_date": "2015-07-31",
+      "rows_train": 804056,
+      "rows_valid": 40282,
+      "baseline_rmspe": 23.5604,
+      "tuned_valid_rmspe": 12.8545,
+      "improvement_vs_baseline": 10.7059
+    }
+  ],
+  "rolling_backtest_summary": {
+    "windows": 3,
+    "average_tuned_rmspe": 13.2412,
+    "average_baseline_rmspe": 22.9997,
+    "average_improvement_vs_baseline": 9.7585
+  },
+  "selected_model_params": {
+    "n_estimators": 500,
+    "learning_rate": 0.05,
+    "max_depth": 10,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "random_state": 42,
+    "n_jobs": -1,
+    "verbosity": 0,
+    "objective": "reg:squarederror"
+  }
+}

@@ -9,4 +9,4 @@ docs/interview_cases.md
 docs/code_review.md
 .pytest_cache/
 mlruns/
-reports/metrics/
+metrics/

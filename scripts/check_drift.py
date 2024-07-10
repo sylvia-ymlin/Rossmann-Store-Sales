@@ -92,7 +92,7 @@ def build_drift_report() -> dict[str, object]:
 
 def main() -> Path:
     report = build_drift_report()
-    output_path = Path("reports/metrics/drift_report.json")
+    output_path = Path("metrics/drift_report.json")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
