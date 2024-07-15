@@ -70,6 +70,32 @@ random_state: 42
 
 Validation uses the last `42` days as a holdout window (`2015-06-20` to `2015-07-31`) plus `3` rolling backtest windows. The main evaluation metric is `RMSPE`.
 
+## Data Analysis
+
+### Sales Trend
+
+Monthly average daily sales across the full dataset period. The seasonal pattern is visible, with a consistent peak towards the end of each year.
+
+![Sales trend](assets/sales_trend.png)
+
+### Sales by Day of Week
+
+Sunday stores are closed in most cases, so Saturday carries the highest median sales. Weekday distributions are relatively tight compared to the weekend spread.
+
+![Sales by day of week](assets/sales_by_dayofweek.png)
+
+### Promotion Effect
+
+Promotions lift average sales on every weekday. The effect is strongest on Monday and weakest on Saturday, where foot traffic is already high.
+
+![Promo effect](assets/promo_effect.png)
+
+### Target Distribution
+
+Raw sales are right-skewed. The `log1p` transformation used during training produces a near-normal distribution, which is better suited for regression.
+
+![Sales distribution](assets/sales_distribution.png)
+
 ## Results
 
 Performance is evaluated with `RMSPE`, which is a useful relative error metric for store sales forecasting. The project uses a strict 42-day time-based holdout split instead of a random train/validation split, and also runs 3 rolling backtests to check whether gains remain stable across multiple forecast windows. Model performance is always compared against a simple historical baseline built from store and day-of-week averages.
