@@ -1,0 +1,16 @@
+pandas
+numpy
+scikit-learn
+xgboost
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+joblib
+matplotlib
+seaborn
+python-json-logger
+python-multipart
+streamlit
+requests
+plotly
