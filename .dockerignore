@@ -1,0 +1,15 @@
+__pycache__
+*.pyc
+.git
+.github
+.gitignore
+.DS_Store
+data/
+models/
+!models/rossmann_production_model.pkl
+notebooks/
+reports/
+tests/
+venv/
+scripts/
+Rossmann_nr1_doc.pdf

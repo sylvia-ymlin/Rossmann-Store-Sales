@@ -3,7 +3,8 @@ import os
 import sys
 
 # Ensure the root directory is in the path for internal imports
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Since this script is in scripts/, we need to go up one level
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from fastapi_app.main import app
 
