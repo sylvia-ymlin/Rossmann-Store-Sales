@@ -45,10 +45,17 @@ def test_run_training_saves_model_and_reports_metric(monkeypatch, tmp_path):
 
     model_path = tmp_path / "model.json"
     metadata_path = tmp_path / "model_metadata.json"
-    metrics = train_module.run_training(str(model_path), metadata_path=str(metadata_path))
+    metrics_path = tmp_path / "training_summary.json"
+    metrics = train_module.run_training(
+        str(model_path),
+        metrics_path=str(metrics_path),
+        metadata_path=str(metadata_path),
+        track_experiments=False,
+    )
 
     assert model_path.exists()
     assert metadata_path.exists()
+    assert metrics_path.exists()
     assert "validation_rmspe" in metrics
     assert metrics["validation_rows"] == 42
 

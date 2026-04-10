@@ -21,6 +21,7 @@ class DummyModel:
 
 def test_predict_endpoint_uses_defaults(monkeypatch, tmp_path):
     monkeypatch.setenv("MODEL_PATH", str(tmp_path / "missing.json"))
+    monkeypatch.setenv("INFERENCE_LOG_PATH", str(tmp_path / "inference.jsonl"))
     client = TestClient(api.app)
     monkeypatch.setattr(api, "model", DummyModel())
     monkeypatch.setattr(api, "model_version", "test-version")
@@ -59,6 +60,7 @@ def test_predict_endpoint_uses_defaults(monkeypatch, tmp_path):
 
 
 def test_predict_endpoint_returns_404_for_unknown_store(monkeypatch):
+    monkeypatch.setenv("INFERENCE_LOG_PATH", "logs/test_inference.jsonl")
     client = TestClient(api.app)
     monkeypatch.setattr(api, "model", DummyModel())
     monkeypatch.setattr(api, "store_lookup", {})

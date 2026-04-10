@@ -1,17 +1,13 @@
 # ruff: noqa: E402
+import argparse
 import json
 import logging
 from pathlib import Path
-import sys
 from typing import Any
 
 import numpy as np
 import pandas as pd
 import xgboost as xgb
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.shared.config import settings
 from src.shared.mlflow_utils import start_run
@@ -195,20 +191,24 @@ def build_summary(holdout: dict[str, Any], backtest: list[dict[str, Any]]) -> di
     }
 
 
-def main() -> Path:
+def run_evaluation(
+    output_path: str = "metrics/model_evaluation.json",
+    *,
+    track_experiments: bool = True,
+) -> Path:
     df, X, y, dates = prepare_dataset()
     holdout = holdout_evaluation(df, X, y, dates, validation_days=42)
     backtest = rolling_backtest(df, X, y, dates, validation_days=42, windows=3)
     summary = build_summary(holdout, backtest)
 
-    output_path = Path("metrics/model_evaluation.json")
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with output_path.open("w", encoding="utf-8") as f:
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
 
     run_name = f"xgb_backtest_{holdout['validation_start_date']}_{holdout['validation_end_date']}"
-    with start_run(run_name, experiment_name="rossmann-evaluation") as run:
-        if run is not None:
+    with start_run(run_name, experiment_name="rossmann-evaluation") if track_experiments else nullcontext() as run:
+        if track_experiments and run is not None:
             import mlflow
 
             mlflow.log_param("validation_days", holdout["validation_days"])
@@ -223,10 +223,28 @@ def main() -> Path:
                 "average_backtest_improvement_vs_baseline",
                 summary["rolling_backtest_summary"]["average_improvement_vs_baseline"],
             )
-            mlflow.log_artifact(str(output_path))
+            mlflow.log_artifact(str(output))
 
-    logger.info("Evaluation summary written to %s", output_path)
-    return output_path
+    logger.info("Evaluation summary written to %s", output)
+    return output
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run holdout and rolling evaluation for Rossmann.")
+    parser.add_argument("--output-path", default="metrics/model_evaluation.json")
+    parser.add_argument("--no-track", action="store_true", help="Disable MLflow experiment tracking.")
+    return parser.parse_args(argv)
+
+
+def nullcontext():
+    from contextlib import nullcontext as _nullcontext
+
+    return _nullcontext(None)
+
+
+def main(argv: list[str] | None = None) -> Path:
+    args = parse_args(argv)
+    return run_evaluation(output_path=args.output_path, track_experiments=not args.no_track)
 
 
 if __name__ == "__main__":

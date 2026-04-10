@@ -16,19 +16,19 @@ help:
 	@echo "  make clean         Clean up"
 
 install:
-	pip install -r requirements.txt
+	python3 -m pip install -r requirements.txt
 
 train:
-	python src/training/train.py
+	python3 -m src.training.train
 
 evaluate:
-	python scripts/evaluate_model.py
+	python3 -m scripts.evaluate_model
 
 drift-check:
-	python scripts/check_drift.py
+	python3 -m scripts.check_drift
 
 test:
-	python scripts/run_tests.py
+	python3 -m scripts.run_tests
 
 lint:
 	ruff check src/ tests/ web/ scripts/

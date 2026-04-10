@@ -1,5 +1,6 @@
 import pandas as pd
 
+from src.training.data_loader import clean_data
 from src.training.features import apply_feature_pipeline
 
 
@@ -74,3 +75,30 @@ def test_pipeline_produces_same_values():
         t_val = train_out[col].iloc[0]
         s_val = serve_out[col].iloc[0]
         assert t_val == s_val, f"Value mismatch for {col}: training={t_val}, serving={s_val}"
+
+
+def test_state_holiday_encoding_matches_between_training_and_serving():
+    training_row = pd.DataFrame(
+        {
+            "Store": [1],
+            "Date": ["2015-07-31"],
+            "Promo": [1],
+            "StateHoliday": ["a"],
+            "SchoolHoliday": [0],
+            "StoreType": ["a"],
+            "Assortment": ["c"],
+            "CompetitionDistance": [1200.0],
+            "Promo2": [0],
+            "Promo2SinceWeek": [0],
+            "Promo2SinceYear": [0],
+            "Open": [1],
+            "Sales": [5000],
+        }
+    )
+    serving_row = training_row.drop(columns=["Sales"]).copy()
+
+    train_out = apply_feature_pipeline(clean_data(training_row))
+    serve_out = apply_feature_pipeline(serving_row)
+
+    assert train_out.loc[0, "StateHoliday"] == 1
+    assert serve_out.loc[0, "StateHoliday"] == 1

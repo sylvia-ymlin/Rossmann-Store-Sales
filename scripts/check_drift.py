@@ -1,15 +1,11 @@
 # ruff: noqa: E402
+import argparse
 import json
 from pathlib import Path
-import sys
 
 import pandas as pd
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from src.serving.monitoring import DEFAULT_INFERENCE_LOG_PATH
+from src.serving.monitoring import get_inference_log_path
 from src.shared.config import settings
 from src.training.data_loader import clean_data, load_raw_data, load_store_data
 from src.training.features import apply_feature_pipeline, build_feature_matrix
@@ -51,11 +47,12 @@ def build_drift_report() -> dict[str, object]:
     )
     train_features = build_feature_matrix(train_df, settings.data.features)
 
-    inference_df = load_recent_inference_rows(DEFAULT_INFERENCE_LOG_PATH)
+    inference_log_path = get_inference_log_path()
+    inference_df = load_recent_inference_rows(inference_log_path)
     if inference_df.empty:
         return {
             "status": "no_inference_logs",
-            "log_path": str(DEFAULT_INFERENCE_LOG_PATH),
+            "log_path": str(inference_log_path),
         }
 
     inference_df = apply_feature_pipeline(
@@ -84,20 +81,31 @@ def build_drift_report() -> dict[str, object]:
     drift_rows.sort(key=lambda row: row["normalized_mean_shift"], reverse=True)
     return {
         "status": "ok",
-        "log_path": str(DEFAULT_INFERENCE_LOG_PATH),
+        "log_path": str(inference_log_path),
         "num_inference_events": int(len(inference_df)),
         "top_drift_features": drift_rows[:10],
     }
 
 
-def main() -> Path:
+def write_drift_report(output_path: str = "metrics/drift_report.json") -> Path:
     report = build_drift_report()
-    output_path = Path("metrics/drift_report.json")
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with output_path.open("w", encoding="utf-8") as f:
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open("w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
-    print(f"Drift report written to {output_path}")
-    return output_path
+    print(f"Drift report written to {output}")
+    return output
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Build an offline drift report from inference logs.")
+    parser.add_argument("--output-path", default="metrics/drift_report.json")
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> Path:
+    args = parse_args(argv)
+    return write_drift_report(output_path=args.output_path)
 
 
 if __name__ == "__main__":

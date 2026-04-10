@@ -31,12 +31,6 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     if "CompetitionDistance" in df.columns:
         df["CompetitionDistance"] = df["CompetitionDistance"].fillna(100000)
 
-    # Convert StateHoliday to numeric
-    if "StateHoliday" in df.columns:
-        df["StateHoliday"] = df["StateHoliday"].astype(str).map({
-            "0": 0, "a": 1, "b": 2, "c": 3
-        }).fillna(0).astype(int)
-
     # Fill binary promo indicators
     for col in ["Promo2", "Promo2SinceWeek", "Promo2SinceYear"]:
         if col in df.columns:

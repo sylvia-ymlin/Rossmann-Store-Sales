@@ -25,7 +25,7 @@ This project focuses on a compact but complete forecasting workflow:
 - track runs locally with MLflow
 - serve predictions through FastAPI and a small browser demo
 
-I kept the project intentionally small. The emphasis is not on building a large platform, but on showing a coherent ML workflow with a thin deployment layer.
+The emphasis is on showing a coherent ML workflow with a thin deployment layer rather than building a large production platform.
 
 ## Demo Snapshot
 
@@ -144,11 +144,31 @@ Dockerfile       minimal container image for inference
 
 ## How To Run
 
-Install dependencies:
+Create and activate a Conda environment:
 
 ```bash
-pip install -r requirements.txt
+conda create -n rossmann-store-sales python=3.12
+conda activate rossmann-store-sales
 ```
+
+Install dependencies inside that environment:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+All commands below assume the `rossmann-store-sales` Conda environment is active.
+
+### Data Preparation
+
+This project expects the Rossmann Kaggle competition files `train.csv` and `store.csv` under `data/raw/`:
+
+```text
+data/raw/train.csv
+data/raw/store.csv
+```
+
+The repository does not bundle the full raw competition data by default. Download the dataset from the Rossmann Store Sales Kaggle competition and place those files in `data/raw/` before running training or evaluation.
 
 Train the model:
 
@@ -201,5 +221,4 @@ make drift-check
 ## Limitations
 
 - This is a compact forecasting and deployment demo, not a production system.
-- Feature engineering is intentionally simple and mostly manual.
 - The explanation output is a model contribution view, not a causal interpretation.

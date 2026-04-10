@@ -1,17 +1,14 @@
 # ruff: noqa: E402
+import argparse
 import numpy as np
 import xgboost as xgb
 import logging
 import json
 from pathlib import Path
-import sys
 import subprocess
 from datetime import datetime, timezone
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
 from src.shared.config import DEFAULT_MODEL_METADATA_PATH, DEFAULT_MODEL_PATH, settings
 from src.shared.mlflow_utils import start_run
 from src.training.data_loader import load_raw_data, clean_data
@@ -56,6 +53,8 @@ def run_training(
     model_path: str = str(DEFAULT_MODEL_PATH),
     metrics_path: str = "metrics/training_summary.json",
     metadata_path: str = str(DEFAULT_MODEL_METADATA_PATH),
+    *,
+    track_experiments: bool = True,
 ) -> dict:
     """Runs training, records validation metadata, and saves the final model."""
     logger.info("Starting Rossmann training pipeline")
@@ -124,8 +123,8 @@ def run_training(
         json.dump(model_metadata, f, indent=2)
 
     run_name = f"xgb_holdout_{metrics['validation_start_date']}_{metrics['validation_end_date']}"
-    with start_run(run_name, experiment_name="rossmann-training") as run:
-        if run is not None:
+    with start_run(run_name, experiment_name="rossmann-training") if track_experiments else nullcontext() as run:
+        if track_experiments and run is not None:
             import mlflow
 
             mlflow.log_params(params)
@@ -134,10 +133,12 @@ def run_training(
             mlflow.log_param("validation_days", metrics["validation_days"])
             mlflow.log_param("validation_start_date", metrics["validation_start_date"])
             mlflow.log_param("validation_end_date", metrics["validation_end_date"])
-            if "train_rmspe" in metrics:
-                mlflow.log_metric("train_rmspe", metrics["train_rmspe"])
-            if "validation_rmspe" in metrics:
-                mlflow.log_metric("validation_rmspe", metrics["validation_rmspe"])
+            train_rmspe = metrics.get("train_rmspe")
+            if isinstance(train_rmspe, (int, float)):
+                mlflow.log_metric("train_rmspe", float(train_rmspe))
+            validation_rmspe = metrics.get("validation_rmspe")
+            if isinstance(validation_rmspe, (int, float)):
+                mlflow.log_metric("validation_rmspe", float(validation_rmspe))
             mlflow.log_artifact(str(output_path))
             mlflow.log_artifact(str(summary_path))
             mlflow.log_artifact(str(metadata_output_path))
@@ -148,5 +149,31 @@ def run_training(
     logger.info("Training pipeline completed successfully.")
     return metrics
 
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Train the Rossmann XGBoost model.")
+    parser.add_argument("--model-path", default=str(DEFAULT_MODEL_PATH))
+    parser.add_argument("--metrics-path", default="metrics/training_summary.json")
+    parser.add_argument("--metadata-path", default=str(DEFAULT_MODEL_METADATA_PATH))
+    parser.add_argument("--no-track", action="store_true", help="Disable MLflow experiment tracking.")
+    return parser.parse_args(argv)
+
+
+def nullcontext():
+    from contextlib import nullcontext as _nullcontext
+
+    return _nullcontext(None)
+
+
+def main(argv: list[str] | None = None) -> dict:
+    args = parse_args(argv)
+    return run_training(
+        model_path=args.model_path,
+        metrics_path=args.metrics_path,
+        metadata_path=args.metadata_path,
+        track_experiments=not args.no_track,
+    )
+
+
 if __name__ == "__main__":
-    run_training()
+    main()

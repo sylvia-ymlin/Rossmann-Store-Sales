@@ -5,6 +5,15 @@ from typing import Iterable
 
 logger = logging.getLogger(__name__)
 
+
+def encode_state_holiday(values: pd.Series) -> pd.Series:
+    """Normalizes Rossmann StateHoliday values to the numeric encoding used by training."""
+    normalized = values.astype(str).str.strip().str.lower().map(
+        {"0": 0, "a": 1, "b": 2, "c": 3}
+    )
+    numeric_fallback = pd.to_numeric(values, errors="coerce")
+    return normalized.fillna(numeric_fallback).fillna(0).astype(int)
+
 def extract_date_features(df: pd.DataFrame) -> pd.DataFrame:
     """Extracts basic calendar features from the Date column."""
     df = df.copy()
@@ -55,6 +64,9 @@ def add_holiday_features(df: pd.DataFrame) -> pd.DataFrame:
 def apply_rossmann_store_features(df: pd.DataFrame) -> pd.DataFrame:
     """Applies store-specific transformations (Competition, Assortment)."""
     df = df.copy()
+
+    if "StateHoliday" in df.columns:
+        df["StateHoliday"] = encode_state_holiday(df["StateHoliday"])
     
     # StoreType/Assortment encoding
     if "StoreType" in df.columns:

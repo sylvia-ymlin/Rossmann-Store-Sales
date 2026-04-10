@@ -1,10 +1,16 @@
 import json
 from datetime import datetime, timezone
+import os
 from pathlib import Path
 
 from src.shared.config import PROJECT_ROOT
 
 DEFAULT_INFERENCE_LOG_PATH = PROJECT_ROOT / "logs" / "inference_requests.jsonl"
+
+
+def get_inference_log_path() -> Path:
+    override = os.environ.get("INFERENCE_LOG_PATH")
+    return Path(override) if override else DEFAULT_INFERENCE_LOG_PATH
 
 
 def build_inference_log_entry(

@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 import logging
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 from pydantic import BaseModel, ConfigDict
 
 class ModelConfig(BaseModel):
