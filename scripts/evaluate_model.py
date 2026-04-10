@@ -1,5 +1,6 @@
 # ruff: noqa: E402
 import argparse
+from contextlib import nullcontext
 import json
 import logging
 from pathlib import Path
@@ -207,7 +208,8 @@ def run_evaluation(
         json.dump(summary, f, indent=2)
 
     run_name = f"xgb_backtest_{holdout['validation_start_date']}_{holdout['validation_end_date']}"
-    with start_run(run_name, experiment_name="rossmann-evaluation") if track_experiments else nullcontext() as run:
+    run_context = start_run(run_name, experiment_name="rossmann-evaluation") if track_experiments else nullcontext(None)
+    with run_context as run:
         if track_experiments and run is not None:
             import mlflow
 
@@ -234,12 +236,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--output-path", default="metrics/model_evaluation.json")
     parser.add_argument("--no-track", action="store_true", help="Disable MLflow experiment tracking.")
     return parser.parse_args(argv)
-
-
-def nullcontext():
-    from contextlib import nullcontext as _nullcontext
-
-    return _nullcontext(None)
 
 
 def main(argv: list[str] | None = None) -> Path:

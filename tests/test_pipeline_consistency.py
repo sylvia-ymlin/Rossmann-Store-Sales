@@ -44,7 +44,7 @@ def _serving_style_row() -> pd.DataFrame:
 
 
 EXPECTED_ENGINEERED_COLS = {
-    "Year", "Month", "Day", "DayOfWeek", "IsWeekend", "DayOfMonth",
+    "Year", "Month", "Day", "DayOfWeek", "IsWeekend",
     "fourier_sin_1", "fourier_cos_1",
     "days_to_easter", "easter_effect",
     "LogCompetitionDistance",
