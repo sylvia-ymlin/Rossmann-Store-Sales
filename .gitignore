@@ -1,4 +1,5 @@
-data/raw/train.csv
+data/raw/
+models/
 logs/
 .DS_Store
 __pycache__/

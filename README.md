@@ -170,6 +170,18 @@ data/raw/store.csv
 
 The repository does not bundle the full raw competition data by default. Download the dataset from the Rossmann Store Sales Kaggle competition and place those files in `data/raw/` before running training or evaluation.
 
+If you use the Kaggle CLI:
+
+```bash
+kaggle competitions download -c rossmann-store-sales -p data/raw
+cd data/raw
+unzip rossmann-store-sales.zip train.csv store.csv
+```
+
+If you download the dataset manually from Kaggle, copy `train.csv` and `store.csv` into `data/raw/`.
+
+After training, generated model artifacts are written to `models/` locally and are intentionally not tracked in Git.
+
 Train the model:
 
 ```bash
